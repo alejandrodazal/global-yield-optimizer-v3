@@ -10,6 +10,7 @@ Sistema inteligente de optimización de rendimiento global con memoria RAG y age
 - **Dashboard Web Interactivo**: Visualiza tus inversiones, métricas y decisiones del agente.
 - **Simulador Financiero**: Prueba estrategias y evalúa resultados en un entorno controlado.
 - **Integración con Banco de la República**: Obtiene datos reales de TRM, inflación y tasas de interés.
+- **Scrapers de CDTs y ETFs**: Obtiene tasas de rendimiento de instrumentos financieros de Colombia, EE.UU. y Panamá.
 
 ## 🏗️ Arquitectura
 
@@ -20,7 +21,10 @@ Sistema inteligente de optimización de rendimiento global con memoria RAG y age
 │   ├── inflation_tracker.py
 │   ├── rate_scraper.py
 │   ├── trm_handler.py
-│   └── banrep_api.py
+│   ├── banrep_api.py
+│   ├── cdt_scraper.py
+│   ├── etf_scraper.py
+│   └── financial_data_provider.py
 │
 ├── /core
 │   ├── portfolio.py
@@ -92,6 +96,19 @@ El sistema ahora incluye integración con las APIs del Banco de la República de
 
 En caso de no poder acceder a las APIs, el sistema utiliza datos simulados basados en patrones históricos reales.
 
+## 💰 Scrapers de Instrumentos Financieros
+
+El sistema incluye scrapers especializados para obtener tasas de rendimiento de:
+
+### CDTs (Colombia) / CDs (EE.UU.) / CDTs (Panamá)
+- Bancolombia, Davivienda, BBVA, Banco de Bogotá (Colombia)
+- Bank of America, Chase, Wells Fargo (EE.UU.)
+- Banco General, Banesco, Banco Panamá (Panamá)
+
+### ETFs
+- ETFs de renta variable y renta fija para los tres países
+- Incluye sectores como tecnología, inmobiliario, energía, etc.
+
 ## 🤖 Componentes Clave
 
 ### 1. Base de Datos Local RAG
@@ -107,6 +124,7 @@ En caso de no poder acceder a las APIs, el sistema utiliza datos simulados basad
 - Visualización de inversiones y métricas
 - Panel de memoria RAG
 - Feedback manual para entrenamiento del agente
+- Vista de datos financieros en tiempo real
 
 ## 📈 Flujo de Mejora Continua
 

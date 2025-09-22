@@ -10,6 +10,9 @@ from core.indicators import calculate_sma
 from data.rate_scraper import scrape_bank_rates, get_best_rate, fetch_banrep_indicator
 from data.trm_handler import get_current_trm, get_trm_history, fetch_trm_from_banrep
 from data.inflation_tracker import get_current_inflation, fetch_colombian_inflation_from_banrep
+from data.financial_data_provider import get_financial_data, get_best_investments
+from data.cdt_scraper import get_cdt_rates, get_best_cdt_rate
+from data.etf_scraper import get_etf_rates, get_best_etf_rate
 
 
 class YieldSimulator:
@@ -17,6 +20,8 @@ class YieldSimulator:
         self.portfolio = portfolio
         self.current_month = 1
         self.simulation_date = datetime.now()
+        # Países relevantes para el portafolio global
+        self.relevant_countries = ["Colombia", "USA", "Panama"]
     
     def run_monthly_simulation(self, rag_agent):
         """
@@ -30,20 +35,36 @@ class YieldSimulator:
         """
         print(f"\n--- Simulación del Mes {self.current_month} ---")
         
-        # 1. Obtener datos macroeconómicos actuales
-        current_trm = get_current_trm()
+        # 1. Obtener datos financieros completos
+        financial_data = get_financial_data()
+        best_investments = get_best_investments()
+        
+        current_trm = financial_data["trm"]
         trm_history = get_trm_history(45)
         sma_45 = calculate_sma(trm_history, 45)
-        inf_co = get_current_inflation("Colombia")
+        inflation_data = financial_data["inflation_rates"]
+        
+        inf_co = inflation_data["Colombia"]
         
         print(f"TRM actual: {current_trm}")
         print(f"SMA45 TRM: {sma_45:.2f}")
         print(f"Inflación Colombia: {inf_co}%")
+        print(f"Inflación EE.UU.: {inflation_data['USA']}%")
+        print(f"Inflación Panamá: {inflation_data['Panama']}%")
         
-        # 2. Obtener tasas de bancos
+        # Mostrar mejores opciones de inversión
+        print("\nMejores opciones de inversión:")
+        for country in self.relevant_countries:
+            best_cdt = best_investments[country]["best_cdt"]
+            best_etf = best_investments[country]["best_etf"]
+            print(f"{country}:")
+            print(f"  Mejor CDT: {best_cdt['bank']} - {best_cdt['rate']}%")
+            print(f"  Mejor ETF: {best_etf['symbol']} - {best_etf['details']['rate']}%")
+        
+        # 2. Obtener tasas de bancos (método existente para compatibilidad)
         bank_rates = scrape_bank_rates()
         best_bank, best_rate_co = get_best_rate(bank_rates, "COP")
-        print(f"Mejor tasa en COP: {best_rate_co}% ({best_bank})")
+        print(f"\nMejor tasa en COP (bancos): {best_rate_co}% ({best_bank})")
         
         # 3. Obtener recomendación de inversión usando el agente RAG
         recommendation = get_investment_recommendation(
@@ -83,16 +104,40 @@ class YieldSimulator:
                 nominal_rate=rates["USD"]
             )
         
-        self.portfolio.record_inflation_rate(
-            month=self.current_month,
-            country="Colombia",
-            inflation_rate=inf_co
-        )
+        # Registrar inflación de países relevantes
+        for country, inflation_rate in inflation_data.items():
+            self.portfolio.record_inflation_rate(
+                month=self.current_month,
+                country=country,
+                inflation_rate=inflation_rate
+            )
         
         self.portfolio.record_trm(
             date=self.simulation_date.strftime("%Y-%m-%d"),
             trm_value=current_trm
         )
+        
+        # Registrar tasas de CDTs
+        cdt_rates = financial_data["cdt_rates"]
+        for country, banks in cdt_rates.items():
+            for bank, rate in banks.items():
+                self.portfolio.record_bank_rate(
+                    month=self.current_month,
+                    bank=f"{country}:{bank}",
+                    currency="COP" if country == "Colombia" else "USD",
+                    nominal_rate=rate
+                )
+        
+        # Registrar tasas de ETFs
+        etf_rates = financial_data["etf_rates"]
+        for country, etfs in etf_rates.items():
+            for symbol, details in etfs.items():
+                self.portfolio.record_bank_rate(
+                    month=self.current_month,
+                    bank=f"{country}:ETF:{symbol}",
+                    currency=details["currency"],
+                    nominal_rate=details["rate"]
+                )
         
         # 7. Registrar decisión en memoria RAG
         decision_text = f"MES {self.current_month}: {recommendation} porque TRM={'{:.2f}'.format(current_trm)} > SMA45={'{:.2f}'.format(sma_45)} y rentabilidad real={'{:.2f}'.format(investment_result['real_rate'])}%"
@@ -101,6 +146,8 @@ class YieldSimulator:
             "trm": current_trm,
             "sma45": sma_45,
             "inflation_co": inf_co,
+            "inflation_usa": inflation_data["USA"],
+            "inflation_panama": inflation_data["Panama"],
             "nominal_rate": best_rate_co,
             "real_rate": investment_result['real_rate'],
             "bank": best_bank
@@ -118,8 +165,9 @@ class YieldSimulator:
             "macro_data": {
                 "trm": current_trm,
                 "sma45": sma_45,
-                "inflation_co": inf_co,
-                "best_rate_co": best_rate_co
+                "inflation_data": inflation_data,
+                "best_rate_co": best_rate_co,
+                "best_investments": best_investments
             }
         }
     

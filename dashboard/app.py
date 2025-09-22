@@ -5,6 +5,7 @@ Dashboard for Global Yield Optimizer v3.0
 import streamlit as st
 import pandas as pd
 from core.portfolio import Portfolio
+from data.financial_data_provider import get_financial_data, get_best_investments
 
 
 def main():
@@ -20,7 +21,8 @@ def main():
         "Dashboard Principal", 
         "Historial de Inversiones", 
         "Memoria RAG",
-        "Simulación"
+        "Simulación",
+        "Datos Financieros"
     ])
     
     if page == "Dashboard Principal":
@@ -31,6 +33,8 @@ def main():
         show_rag_memory()
     elif page == "Simulación":
         show_simulation()
+    elif page == "Datos Financieros":
+        show_financial_data()
 
 
 def show_dashboard(portfolio):
@@ -60,6 +64,17 @@ def show_dashboard(portfolio):
         st.metric("Rentabilidad Promedio", "4.2%", "+0.3%")
     with col3:
         st.metric("Inversiones Activas", "8", "2")
+    
+    # Mostrar inflación de países relevantes
+    st.subheader("Inflación por País")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Colombia", "3.2%", "↓0.1%")
+    with col2:
+        st.metric("EE.UU.", "2.8%", "↑0.2%")
+    with col3:
+        st.metric("Panamá", "2.5%", "0.0%")
 
 
 def show_investment_history(portfolio):
@@ -108,6 +123,46 @@ def show_simulation():
     
     if st.button("Ejecutar Simulación del Mes"):
         st.success("Simulación ejecutada correctamente. Ver resultados en el dashboard principal.")
+
+
+def show_financial_data():
+    st.header("💰 Datos Financieros")
+    
+    # Obtener datos financieros
+    financial_data = get_financial_data()
+    best_investments = get_best_investments()
+    
+    # Mostrar TRM
+    st.subheader("Tasa de Cambio (TRM)")
+    st.metric("TRM Actual", f"${financial_data['trm']:,.2f} COP/USD")
+    
+    # Mostrar inflación por país
+    st.subheader("Inflación por País")
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        st.metric("Colombia", f"{financial_data['inflation_rates']['Colombia']}%")
+    with col2:
+        st.metric("EE.UU.", f"{financial_data['inflation_rates']['USA']}%")
+    with col3:
+        st.metric("Panamá", f"{financial_data['inflation_rates']['Panama']}%")
+    
+    # Mostrar mejores inversiones
+    st.subheader("Mejores Opciones de Inversión")
+    
+    for country in ["Colombia", "USA", "Panama"]:
+        st.write(f"**{country}**")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            best_cdt = best_investments[country]["best_cdt"]
+            st.write(f"CDT: {best_cdt['bank']} - {best_cdt['rate']}%")
+        
+        with col2:
+            best_etf = best_investments[country]["best_etf"]
+            st.write(f"ETF: {best_etf['symbol']} - {best_etf['details']['rate']}%")
+        
+        st.markdown("---")
 
 
 if __name__ == "__main__":
