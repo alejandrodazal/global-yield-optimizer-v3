@@ -9,6 +9,7 @@ Sistema inteligente de optimización de rendimiento global con memoria RAG y age
 - **Agente Inteligente de Mejora Continua**: Aprende de decisiones pasadas para ofrecer recomendaciones cada vez mejores.
 - **Dashboard Web Interactivo**: Visualiza tus inversiones, métricas y decisiones del agente.
 - **Simulador Financiero**: Prueba estrategias y evalúa resultados en un entorno controlado.
+- **Integración con Banco de la República**: Obtiene datos reales de TRM, inflación y tasas de interés.
 
 ## 🏗️ Arquitectura
 
@@ -18,7 +19,8 @@ Sistema inteligente de optimización de rendimiento global con memoria RAG y age
 ├── /data
 │   ├── inflation_tracker.py
 │   ├── rate_scraper.py
-│   └── trm_handler.py
+│   ├── trm_handler.py
+│   └── banrep_api.py
 │
 ├── /core
 │   ├── portfolio.py
@@ -49,7 +51,7 @@ Sistema inteligente de optimización de rendimiento global con memoria RAG y age
 
 1. Clona el repositorio:
    ```bash
-   git clone <repositorio>
+   git clone https://github.com/alejandrodazal/global-yield-optimizer-v3.git
    cd global_yield_optimizer_v3
    ```
 
@@ -79,6 +81,16 @@ Sistema inteligente de optimización de rendimiento global con memoria RAG y age
   ```bash
   python main.py --mode train
   ```
+
+## 🔧 Integración con Banco de la República
+
+El sistema ahora incluye integración con las APIs del Banco de la República de Colombia para obtener datos económicos reales:
+
+- **TRM (Tasa de Cambio Representativa del Mercado)**
+- **Inflación (IPC - Índice de Precios al Consumidor)**
+- **Tasas de Interés**
+
+En caso de no poder acceder a las APIs, el sistema utiliza datos simulados basados en patrones históricos reales.
 
 ## 🤖 Componentes Clave
 

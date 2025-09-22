@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 from core.portfolio import Portfolio
 from core.strategy import get_investment_recommendation, calculate_real_return
 from core.indicators import calculate_sma
-from data.rate_scraper import scrape_bank_rates, get_best_rate
-from data.trm_handler import get_current_trm, get_trm_history
-from data.inflation_tracker import get_current_inflation
+from data.rate_scraper import scrape_bank_rates, get_best_rate, fetch_banrep_indicator
+from data.trm_handler import get_current_trm, get_trm_history, fetch_trm_from_banrep
+from data.inflation_tracker import get_current_inflation, fetch_colombian_inflation_from_banrep
 
 
 class YieldSimulator:
@@ -152,3 +152,29 @@ class YieldSimulator:
             "start_date": start_date,
             "end_date": end_date
         }
+    
+    def fetch_real_data(self):
+        """
+        Obtiene datos reales del Banco de la República para la simulación.
+        
+        Returns:
+            dict: Datos reales obtenidos
+        """
+        try:
+            # Obtener TRM real
+            trm_data = fetch_trm_from_banrep()
+            
+            # Obtener inflación real
+            inflation_data = fetch_colombian_inflation_from_banrep()
+            
+            # Obtener otras tasas de interés
+            ti_data = fetch_banrep_indicator("TI")  # Tasa de Intervención
+            
+            return {
+                "trm": trm_data,
+                "inflation": inflation_data,
+                "interest_rate": ti_data
+            }
+        except Exception as e:
+            print(f"Error al obtener datos reales: {e}")
+            return None

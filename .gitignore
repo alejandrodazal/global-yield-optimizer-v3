@@ -162,3 +162,4 @@ cython_debug/
 # RAG memory databases
 /rag_memory/chroma_db/
 /rag_memory/sqlite_db.db
+GITHUB_DESCRIPTION.md
